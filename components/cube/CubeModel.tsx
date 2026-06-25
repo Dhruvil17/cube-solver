@@ -20,6 +20,16 @@ const ROTATION_CONFIGS: Record<MoveLetter, { axis: THREE.Vector3; direction: num
   S: { axis: new THREE.Vector3(0, 0, 1), direction: -1 },
 };
 
+// Projection planes for each face (normal pointing out, distance constant from origin)
+const FACE_PLANES: Record<FaceLetter, { normal: THREE.Vector3; constant: number }> = {
+  U: { normal: new THREE.Vector3(0, 1, 0), constant: -1.5 },
+  D: { normal: new THREE.Vector3(0, -1, 0), constant: -1.5 },
+  R: { normal: new THREE.Vector3(1, 0, 0), constant: -1.5 },
+  L: { normal: new THREE.Vector3(-1, 0, 0), constant: -1.5 },
+  F: { normal: new THREE.Vector3(0, 0, 1), constant: -1.5 },
+  B: { normal: new THREE.Vector3(0, 0, -1), constant: -1.5 },
+};
+
 // Easing function for smooth animation snap
 function easeInOutCubic(t: number): number {
   return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
@@ -69,6 +79,18 @@ export function CubeModel() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [queueMoves]);
 
+  // Global pointerup listener to safely clean up drag start info
+  useEffect(() => {
+    const handleGlobalPointerUp = () => {
+      if (dragStartInfo.current) {
+        dragStartInfo.current = null;
+        setOrbitEnabled(true);
+      }
+    };
+    window.addEventListener("pointerup", handleGlobalPointerUp);
+    return () => window.removeEventListener("pointerup", handleGlobalPointerUp);
+  }, [setOrbitEnabled]);
+
   // Drag detection
   const dragStartInfo = useRef<{
     cubieId: string;
@@ -80,7 +102,101 @@ export function CubeModel() {
   } | null>(null);
 
   // ─── ANIMATION FRAME LOOP ────────────────────────────────────────────────────
-  useFrame((_, delta) => {
+  useFrame((state, delta) => {
+    // ── Real-time Drag / Swipe detection ──
+    const startInfo = dragStartInfo.current;
+    if (startInfo && !animatingMove) {
+      const config = FACE_PLANES[startInfo.face];
+      const plane = new THREE.Plane(config.normal, config.constant);
+      const intersectionPoint = new THREE.Vector3();
+      state.raycaster.ray.intersectPlane(plane, intersectionPoint);
+
+      if (intersectionPoint) {
+        const displacement = new THREE.Vector3().subVectors(intersectionPoint, startInfo.point);
+        // Using a 3D distance threshold of 0.35 to trigger the layer twist
+        if (displacement.length() >= 0.35) {
+          const { face, cx, cy, cz } = startInfo;
+          let detectedMove: string | null = null;
+
+          if (face === "U") {
+            if (Math.abs(displacement.x) > Math.abs(displacement.z)) {
+              const isRight = displacement.x > 0;
+              detectedMove = isRight ? "U'" : "U";
+            } else {
+              const isFront = displacement.z > 0;
+              if (cx > 0) detectedMove = isFront ? "R'" : "R";
+              else if (cx < 0) detectedMove = isFront ? "L" : "L'";
+              else detectedMove = isFront ? "M" : "M'";
+            }
+          } else if (face === "D") {
+            if (Math.abs(displacement.x) > Math.abs(displacement.z)) {
+              const isRight = displacement.x > 0;
+              detectedMove = isRight ? "D" : "D'";
+            } else {
+              const isFront = displacement.z > 0;
+              if (cx > 0) detectedMove = isFront ? "R'" : "R";
+              else if (cx < 0) detectedMove = isFront ? "L" : "L'";
+              else detectedMove = isFront ? "M" : "M'";
+            }
+          } else if (face === "F") {
+            if (Math.abs(displacement.x) > Math.abs(displacement.y)) {
+              const isRight = displacement.x > 0;
+              if (cy > 0) detectedMove = isRight ? "U'" : "U";
+              else if (cy < 0) detectedMove = isRight ? "D" : "D'";
+              else detectedMove = isRight ? "E" : "E'";
+            } else {
+              const isUp = displacement.y > 0;
+              if (cx > 0) detectedMove = isUp ? "R" : "R'";
+              else if (cx < 0) detectedMove = isUp ? "L'" : "L";
+              else detectedMove = isUp ? "M'" : "M";
+            }
+          } else if (face === "B") {
+            if (Math.abs(displacement.x) > Math.abs(displacement.y)) {
+              const isRight = displacement.x > 0;
+              if (cy > 0) detectedMove = isRight ? "U" : "U'";
+              else if (cy < 0) detectedMove = isRight ? "D'" : "D";
+              else detectedMove = isRight ? "E'" : "E";
+            } else {
+              const isUp = displacement.y > 0;
+              if (cx > 0) detectedMove = isUp ? "R'" : "R";
+              else if (cx < 0) detectedMove = isUp ? "L" : "L'";
+              else detectedMove = isUp ? "M" : "M'";
+            }
+          } else if (face === "R") {
+            if (Math.abs(displacement.z) > Math.abs(displacement.y)) {
+              const isFront = displacement.z > 0;
+              if (cy > 0) detectedMove = isFront ? "U" : "U'";
+              else if (cy < 0) detectedMove = isFront ? "D'" : "D";
+              else detectedMove = isFront ? "E'" : "E";
+            } else {
+              const isUp = displacement.y > 0;
+              if (cz > 0) detectedMove = isUp ? "F'" : "F";
+              else if (cz < 0) detectedMove = isUp ? "B" : "B'";
+              else detectedMove = isUp ? "S'" : "S";
+            }
+          } else if (face === "L") {
+            if (Math.abs(displacement.z) > Math.abs(displacement.y)) {
+              const isFront = displacement.z > 0;
+              if (cy > 0) detectedMove = isFront ? "U'" : "U";
+              else if (cy < 0) detectedMove = isFront ? "D" : "D'";
+              else detectedMove = isFront ? "E" : "E'";
+            } else {
+              const isUp = displacement.y > 0;
+              if (cz > 0) detectedMove = isUp ? "F" : "F'";
+              else if (cz < 0) detectedMove = isUp ? "B'" : "B";
+              else detectedMove = isUp ? "S" : "S'";
+            }
+          }
+
+          if (detectedMove) {
+            queueMoves([detectedMove]);
+            dragStartInfo.current = null;
+            setOrbitEnabled(true);
+          }
+        }
+      }
+    }
+
     // ── Idle: pull next move from queue ──────────────────────────────────────
     if (!animatingMove) {
       if (moveQueue.length > 0) {
@@ -161,93 +277,7 @@ export function CubeModel() {
     dragStartInfo.current = { cubieId, face, cx, cy, cz, point: e.point.clone() };
   };
 
-  const handlePointerUp = (e: ThreeEvent<PointerEvent>) => {
-    setOrbitEnabled(true);
-    const startInfo = dragStartInfo.current;
-    if (!startInfo) return;
-    dragStartInfo.current = null;
-    if (!e.point) return;
 
-    const displacement = new THREE.Vector3().subVectors(e.point, startInfo.point);
-    if (displacement.length() < 0.25) return;
-
-    const { face, cx, cy, cz } = startInfo;
-    let detectedMove: string | null = null;
-
-    if (face === "U") {
-      if (Math.abs(displacement.x) > Math.abs(displacement.z)) {
-        const isRight = displacement.x > 0;
-        detectedMove = isRight ? "U'" : "U";
-      } else {
-        const isFront = displacement.z > 0;
-        if (cx > 0) detectedMove = isFront ? "R'" : "R";
-        else if (cx < 0) detectedMove = isFront ? "L" : "L'";
-        else detectedMove = isFront ? "M" : "M'";
-      }
-    } else if (face === "D") {
-      if (Math.abs(displacement.x) > Math.abs(displacement.z)) {
-        const isRight = displacement.x > 0;
-        detectedMove = isRight ? "D" : "D'";
-      } else {
-        const isFront = displacement.z > 0;
-        if (cx > 0) detectedMove = isFront ? "R'" : "R";
-        else if (cx < 0) detectedMove = isFront ? "L" : "L'";
-        else detectedMove = isFront ? "M" : "M'";
-      }
-    } else if (face === "F") {
-      if (Math.abs(displacement.x) > Math.abs(displacement.y)) {
-        const isRight = displacement.x > 0;
-        if (cy > 0) detectedMove = isRight ? "U'" : "U";
-        else if (cy < 0) detectedMove = isRight ? "D" : "D'";
-        else detectedMove = isRight ? "E" : "E'";
-      } else {
-        const isUp = displacement.y > 0;
-        if (cx > 0) detectedMove = isUp ? "R" : "R'";
-        else if (cx < 0) detectedMove = isUp ? "L'" : "L";
-        else detectedMove = isUp ? "M'" : "M";
-      }
-    } else if (face === "B") {
-      if (Math.abs(displacement.x) > Math.abs(displacement.y)) {
-        const isRight = displacement.x > 0;
-        if (cy > 0) detectedMove = isRight ? "U" : "U'";
-        else if (cy < 0) detectedMove = isRight ? "D'" : "D";
-        else detectedMove = isRight ? "E'" : "E";
-      } else {
-        const isUp = displacement.y > 0;
-        if (cx > 0) detectedMove = isUp ? "R'" : "R";
-        else if (cx < 0) detectedMove = isUp ? "L" : "L'";
-        else detectedMove = isUp ? "M" : "M'";
-      }
-    } else if (face === "R") {
-      if (Math.abs(displacement.z) > Math.abs(displacement.y)) {
-        const isFront = displacement.z > 0;
-        if (cy > 0) detectedMove = isFront ? "U" : "U'";
-        else if (cy < 0) detectedMove = isFront ? "D'" : "D";
-        else detectedMove = isFront ? "E'" : "E";
-      } else {
-        const isUp = displacement.y > 0;
-        if (cz > 0) detectedMove = isUp ? "F'" : "F";
-        else if (cz < 0) detectedMove = isUp ? "B" : "B'";
-        else detectedMove = isUp ? "S'" : "S";
-      }
-    } else if (face === "L") {
-      if (Math.abs(displacement.z) > Math.abs(displacement.y)) {
-        const isFront = displacement.z > 0;
-        if (cy > 0) detectedMove = isFront ? "U'" : "U";
-        else if (cy < 0) detectedMove = isFront ? "D" : "D'";
-        else detectedMove = isFront ? "E" : "E'";
-      } else {
-        const isUp = displacement.y > 0;
-        if (cz > 0) detectedMove = isUp ? "F" : "F'";
-        else if (cz < 0) detectedMove = isUp ? "B'" : "B";
-        else detectedMove = isUp ? "S" : "S'";
-      }
-    }
-
-    if (detectedMove) {
-      queueMoves([detectedMove]);
-    }
-  };
 
 
   // ─── RENDER ──────────────────────────────────────────────────────────────────
@@ -297,7 +327,6 @@ export function CubeModel() {
                     onPointerDown={(e) =>
                       handlePointerDown(e, cubie.id, faceDir, cubie.x, cubie.y, cubie.z)
                     }
-                    onPointerUp={handlePointerUp}
                   >
                     <boxGeometry args={[W, W, T]} />
                     <meshStandardMaterial

@@ -62,6 +62,15 @@ class SoundSynth {
     osc.stop(time + 0.05);
     noise.start(time);
     noise.stop(time + 0.05);
+
+    osc.onended = () => {
+      osc.disconnect();
+      gain.disconnect();
+    };
+    noise.onended = () => {
+      noise.disconnect();
+      filter.disconnect();
+    };
   }
 
   // Synthesize a quick "whoosh" sweep for scrambles
@@ -86,6 +95,11 @@ class SoundSynth {
 
     osc.start(time);
     osc.stop(time + 0.25);
+
+    osc.onended = () => {
+      osc.disconnect();
+      gain.disconnect();
+    };
   }
 
   // Synthesize a soft chime for solving success
@@ -109,6 +123,13 @@ class SoundSynth {
       osc.connect(gain);
       osc.start(time + idx * 0.06);
       osc.stop(time + 0.8);
+
+      osc.onended = () => {
+        osc.disconnect();
+        if (idx === freqs.length - 1) {
+          gain.disconnect();
+        }
+      };
     });
   }
 
@@ -134,6 +155,11 @@ class SoundSynth {
 
     osc.start(time);
     osc.stop(time + 0.02);
+
+    osc.onended = () => {
+      osc.disconnect();
+      gain.disconnect();
+    };
   }
 }
 

@@ -131,7 +131,7 @@ export const useCubeStore = create<CubeStore>((set, get) => {
     playbackIndex: -1,
     isPlaybackActive: false,
     playbackSpeed: 1,
-    isMuted: true,
+    isMuted: false,
     isOrbitEnabled: true,
 
     reset: () => {
@@ -258,6 +258,13 @@ export const useCubeStore = create<CubeStore>((set, get) => {
     setMuted: (muted) => {
       set({ isMuted: muted });
       audio.playTick(muted);
+      if (typeof window !== 'undefined') {
+        try {
+          localStorage.setItem('rubiks_cube_muted', String(muted));
+        } catch (err) {
+          console.error('Error saving muted state to localStorage:', err);
+        }
+      }
     },
 
     setSpeed: (speed) => {
@@ -340,6 +347,11 @@ export const useCubeStore = create<CubeStore>((set, get) => {
         const savedState = localStorage.getItem('rubiks_cube_state');
         if (savedState && savedState.length === 54) {
           set({ cubies: fromFaceletString(savedState) });
+        }
+
+        const savedMuted = localStorage.getItem('rubiks_cube_muted');
+        if (savedMuted !== null) {
+          set({ isMuted: savedMuted === 'true' });
         }
       } catch (err) {
         console.error('Error loading state from localStorage:', err);

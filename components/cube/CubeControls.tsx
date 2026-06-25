@@ -38,7 +38,7 @@ export function CubeControls() {
   return (
     <div className="flex w-full flex-col gap-4 lg:w-96 lg:shrink-0">
       {/* 1. Core Actions Card */}
-      <div className="rounded-2xl border border-cube-border bg-cube-surface/80 p-5 backdrop-blur-md">
+      <div className="rounded-2xl border border-cube-border bg-cube-surface/80 p-4 sm:p-5 backdrop-blur-md">
         <h2 className="text-sm font-semibold uppercase tracking-wider text-cube-muted flex items-center justify-between">
           <span>Engine Controls</span>
           <span className="flex items-center gap-1.5 text-[10px] normal-case bg-cube-border/40 px-2 py-0.5 rounded-full text-slate-300">
@@ -182,7 +182,7 @@ export function CubeControls() {
       </div>
 
       {/* 2. Manual Inputs Panel */}
-      <div className="rounded-2xl border border-cube-border bg-cube-surface/85 p-5 backdrop-blur-md">
+      <div className="rounded-2xl border border-cube-border bg-cube-surface/85 p-4 sm:p-5 backdrop-blur-md">
         <h3 className="text-xs font-semibold uppercase tracking-wider text-cube-muted">
           Manual Twists
         </h3>
@@ -216,7 +216,7 @@ export function CubeControls() {
       </div>
 
       {/* 3. Keyboard Guide Panel */}
-      <div className="rounded-2xl border border-dashed border-cube-accent/30 bg-cube-accent/5 p-4 flex gap-3.5">
+      <div className="hidden rounded-2xl border border-dashed border-cube-accent/30 bg-cube-accent/5 p-4 gap-3.5 sm:flex">
         <HelpCircle className="h-5 w-5 text-cube-accent shrink-0 mt-0.5" />
         <div>
           <h4 className="text-xs font-semibold text-white">Keyboard Shortcuts</h4>

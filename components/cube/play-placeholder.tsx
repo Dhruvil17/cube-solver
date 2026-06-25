@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { ArrowRight, Volume2, VolumeX } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { CubePreviewGraphic } from "@/components/cube/cube-preview-graphic";
 import { siteConfig } from "@/lib/site";
 
@@ -12,12 +12,21 @@ const MOVE_FACES = ["U", "U'", "R", "R'", "F", "F'"] as const;
  * Play page shell — polished UI frame until the Three.js cube mounts.
  */
 export function PlayPlaceholder() {
-  const [muted, setMuted] = useState(true);
+  const [muted, setMuted] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const savedMuted = localStorage.getItem('rubiks_cube_muted');
+      if (savedMuted !== null) {
+        setMuted(savedMuted === 'true');
+      }
+    }
+  }, []);
 
   return (
     <div className="flex flex-1 flex-col gap-4 lg:flex-row">
       <div
-        className="cube-canvas relative flex min-h-[55vh] flex-1 flex-col overflow-hidden rounded-2xl border border-cube-border bg-[radial-gradient(circle_at_center,_#1e222b_0%,_#0f1115_100%)] lg:min-h-[520px]"
+        className="cube-canvas relative flex min-h-[38vh] sm:min-h-[55vh] lg:min-h-[520px] flex-1 flex-col overflow-hidden rounded-2xl border border-cube-border bg-[radial-gradient(circle_at_center,_#1e222b_0%,_#0f1115_100%)]"
         style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
       >
         {/* Top bar */}
@@ -28,7 +37,17 @@ export function PlayPlaceholder() {
           </div>
           <button
             type="button"
-            onClick={() => setMuted((m) => !m)}
+            onClick={() => setMuted((m) => {
+              const nextMuted = !m;
+              if (typeof window !== 'undefined') {
+                try {
+                  localStorage.setItem('rubiks_cube_muted', String(nextMuted));
+                } catch (err) {
+                  console.error('Error saving muted state:', err);
+                }
+              }
+              return nextMuted;
+            })}
             className="flex items-center gap-1.5 rounded-lg border border-cube-border bg-cube-surface/80 px-2.5 py-1.5 text-xs text-cube-muted transition-colors hover:text-white"
             aria-label={muted ? "Unmute sounds" : "Mute sounds"}
           >
