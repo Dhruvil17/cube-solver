@@ -1,0 +1,47 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+
+  --color-cube-bg: #0f1115;
+  --color-cube-surface: #15181e;
+  --color-cube-border: #2d3139;
+  --color-cube-muted: #9ca3af;
+  --color-cube-accent: #6366f1;
+  --color-cube-accent-hover: #818cf8;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: var(--color-cube-bg);
+  color: #f1f5f9;
+}
+
+/* Prevent page scroll when interacting with the 3D canvas (Phase 1) */
+.cube-canvas {
+  touch-action: none;
+}
+
+@keyframes cube-preview-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+.cube-preview-float {
+  animation: cube-preview-float 5s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cube-preview-float {
+    animation: none;
+  }
+}
