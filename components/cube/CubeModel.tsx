@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useEffect, useMemo } from "react";
-import { useFrame, ThreeEvent } from "@react-three/fiber";
+import { useFrame, ThreeEvent, useThree } from "@react-three/fiber";
 import { RoundedBox } from "@react-three/drei";
 import * as THREE from "three";
 import { useCubeStore } from "@/stores/cube-store";
@@ -47,6 +47,8 @@ export function CubeModel() {
     setOrbitEnabled,
   } = useCubeStore();
 
+  const { controls } = useThree() as { controls: any };
+
   // Stable ref map: cubieId -> THREE.Group
   // This survives re-renders and position changes
   const meshById = useRef<Map<string, THREE.Group>>(new Map());
@@ -84,12 +86,15 @@ export function CubeModel() {
     const handleGlobalPointerUp = () => {
       if (dragStartInfo.current) {
         dragStartInfo.current = null;
+        if (controls) {
+          controls.enabled = true;
+        }
         setOrbitEnabled(true);
       }
     };
     window.addEventListener("pointerup", handleGlobalPointerUp);
     return () => window.removeEventListener("pointerup", handleGlobalPointerUp);
-  }, [setOrbitEnabled]);
+  }, [setOrbitEnabled, controls]);
 
   // Drag detection
   const dragStartInfo = useRef<{
@@ -191,6 +196,9 @@ export function CubeModel() {
           if (detectedMove) {
             queueMoves([detectedMove]);
             dragStartInfo.current = null;
+            if (controls) {
+              controls.enabled = true;
+            }
             setOrbitEnabled(true);
           }
         }
@@ -273,6 +281,9 @@ export function CubeModel() {
   ) => {
     e.stopPropagation();
     if (animatingMove) return;
+    if (controls) {
+      controls.enabled = false;
+    }
     setOrbitEnabled(false);
     dragStartInfo.current = { cubieId, face, cx, cy, cz, point: e.point.clone() };
   };
