@@ -44,7 +44,7 @@ export function PlayPlaceholder() {
             Interactive 3D cube is next
           </p>
           <p className="mt-2 max-w-sm text-center text-xs leading-relaxed text-cube-muted">
-            You&apos;ll be able to swipe faces, scramble, and watch optimal solves
+            You&apos;ll be able to swipe faces, scramble and watch optimal solves
             animate here. The colorful cube above is a preview — not a broken state.
           </p>
         </div>

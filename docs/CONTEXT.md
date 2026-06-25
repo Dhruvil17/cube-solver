@@ -4,7 +4,7 @@
 > **Location:** `docs/CONTEXT.md` — see [`docs/README.md`](./README.md) for all documentation.
 >
 > **Last updated:** June 25, 2026 (expanded: qbr, cv-cube-solver, OpenCV ecosystem; **boilerplate + UI shell built** — see [`PROJECT-STATE.md`](./PROJECT-STATE.md))  
-> **Author context:** Builder knows how to solve 2×2 and 3×3 physically; owns mirror cube, 4×4, 5×5, and other shape mods.
+> **Author context:** Builder knows how to solve 2×2 and 3×3 physically; owns mirror cube, 4×4, 5×5 and other shape mods.
 
 ---
 
@@ -84,7 +84,7 @@ A **browser-first Rubik's Cube platform** that combines:
 
 ### Why this is achievable with vibe coding
 
-Every major feature already has **proven open-source implementations**. We are not inventing cube theory — we are **composing, polishing, and differentiating** existing primitives into a cohesive product. Recent projects (2024–2026) were built entirely with AI agents + modern JS stacks in weeks, not years.
+Every major feature already has **proven open-source implementations**. We are not inventing cube theory — we are **composing, polishing and differentiating** existing primitives into a cohesive product. Recent projects (2024–2026) were built entirely with AI agents + modern JS stacks in weeks, not years.
 
 ### Differentiation thesis
 
@@ -190,7 +190,7 @@ Most competitors do **one thing well** (scan OR simulate OR teach). Few combine:
 
 1. **Transparent solver modes** — Let users pick: "Beginner (layer-by-layer steps)", "Fast (Kociemba ~20 moves)", "Educational (show CFOP phases)". Competitors hide the algorithm choice.
 
-2. **Multi-cube hub** — One brand covering 2×2 → 5×5 + mirror, with consistent UX. CubeSolver.ai is closest but lacks scan, polish, and shape mods.
+2. **Multi-cube hub** — One brand covering 2×2 → 5×5 + mirror, with consistent UX. CubeSolver.ai is closest but lacks scan, polish and shape mods.
 
 3. **Scan + Play + Learn trinity** — CubeUnstuck nails scan; Cubzor nails learn; nobody nails all three with modern design.
 

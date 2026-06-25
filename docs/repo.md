@@ -2,13 +2,13 @@
 
 > **Location:** `docs/repo.md` — boilerplate reference used to scaffold this project.
 
-This document provides a concise technical blueprint of the configuration, dependencies, folder structure, and utilities used in this project. Use this reference to quickly set up or bootstrap a new repository with the exact same technology stack.
+This document provides a concise technical blueprint of the configuration, dependencies, folder structure and utilities used in this project. Use this reference to quickly set up or bootstrap a new repository with the exact same technology stack.
 
 ---
 
 ## 1. Core Tech Stack & Dependency Matrix
 
-The project uses Next.js 16 (App Router), React 19, and Tailwind CSS v4.0.0.
+The project uses Next.js 16 (App Router), React 19 and Tailwind CSS v4.0.0.
 
 ### `package.json`
 
@@ -190,7 +190,7 @@ export function cn(...classes: (string | false | null | undefined)[]): string {
 
 ### Basic App Shell (`app/layout.tsx` - Scaffold)
 
-Includes standard SEO optimization, metadata base, and layout structure.
+Includes standard SEO optimization, metadata base and layout structure.
 
 ```typescript
 import type { Metadata } from "next";

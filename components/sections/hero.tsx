@@ -17,7 +17,7 @@ const highlights = [
   {
     icon: Volume2,
     title: "Sound & polish",
-    description: "Satisfying turn clicks, scramble effects, and a mute toggle.",
+    description: "Satisfying turn clicks, scramble effects and a mute toggle.",
   },
   {
     icon: Zap,
@@ -66,7 +66,7 @@ export function Features() {
           Built to feel amazing on your phone
         </h2>
         <p className="mx-auto mt-3 max-w-2xl text-center text-cube-muted">
-          Three.js, touch gestures, sound, and responsive layout — from day one.
+          Three.js, touch gestures, sound and responsive layout
         </p>
         <ul className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
           {highlights.map((item) => (

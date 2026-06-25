@@ -2,7 +2,7 @@
 
 > Short implementation guide for Phase 1 only. Full research lives in [`CONTEXT.md`](./CONTEXT.md). Build status: [`PROJECT-STATE.md`](./PROJECT-STATE.md).
 
-**Goal:** Ship a live URL with a beautiful 3×3 cube you can play with, scramble, and auto-solve — good enough to share online.
+**Goal:** Ship a live URL with a beautiful 3×3 cube you can play with, scramble and auto-solve — good enough to share online.
 
 **Timeline:** ~1–2 weeks (vibe coding with Cursor / Claude)
 
@@ -70,7 +70,7 @@ Vercel          → hosting
 howler.js             → turn / scramble / solve sounds (with mute toggle)
 ```
 
-**Do NOT use CSS 3D** (like the Google AI Studio CUBIX app). It feels flat on phones. **WebGL via Three.js** is the only way to get real depth, lighting, and glossy stickers on mobile browsers.
+**Do NOT use CSS 3D** (like the Google AI Studio CUBIX app). It feels flat on phones. **WebGL via Three.js** is the only way to get real depth, lighting and glossy stickers on mobile browsers.
 
 ---
 

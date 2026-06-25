@@ -4,7 +4,7 @@ import { PlayClient } from "@/components/cube/PlayClient";
 export const metadata: Metadata = {
   title: "Play",
   description:
-    "Interactive 3×3 Rubik's cube simulator — scramble, solve, and practice moves in your browser.",
+    "Interactive 3×3 Rubik's cube simulator — scramble, solve and practice moves in your browser.",
 };
 
 export default function PlayPage() {
@@ -15,7 +15,7 @@ export default function PlayPage() {
           Cube Playground
         </h1>
         <p className="mt-2 max-w-2xl text-sm text-cube-muted sm:text-base">
-          Vibe-coded 3D Rubik&apos;s cube simulator with smooth touch gestures, sound synth, and Kociemba auto-solver.
+          Vibe-coded 3D Rubik&apos;s cube simulator with smooth touch gestures, sound synth and Kociemba auto-solver.
         </p>
       </div>
       <PlayClient />

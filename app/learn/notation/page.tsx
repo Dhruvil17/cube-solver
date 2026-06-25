@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 export const metadata: Metadata = {
   title: "Notation",
   description:
-    "Learn Rubik's cube notation — U, R, F, prime moves, and doubles explained for beginners.",
+    "Learn Rubik's cube notation — U, R, F, prime moves and doubles explained for beginners.",
 };
 
 const basicMoves = [

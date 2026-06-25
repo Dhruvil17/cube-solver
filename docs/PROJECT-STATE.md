@@ -1,6 +1,6 @@
 # Cube Solver — Project State (Living Document)
 
-> **Purpose:** Track what is **actually built** in the repo — structure, files, decisions, and progress. Update this after every meaningful coding session.  
+> **Purpose:** Track what is **actually built** in the repo — structure, files, decisions and progress. Update this after every meaningful coding session.  
 > **Location:** `docs/PROJECT-STATE.md` — see [`README.md`](./README.md) for all documentation.
 >
 > **Last updated:** June 25, 2026
