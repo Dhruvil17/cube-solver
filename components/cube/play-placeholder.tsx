@@ -26,7 +26,7 @@ export function PlayPlaceholder() {
   return (
     <div className="flex flex-1 flex-col gap-4 lg:flex-row">
       <div
-        className="cube-canvas relative flex min-h-[38vh] sm:min-h-[55vh] lg:min-h-[520px] flex-1 flex-col overflow-hidden rounded-2xl border border-cube-border bg-[radial-gradient(circle_at_center,_#1e222b_0%,_#0f1115_100%)]"
+        className="cube-canvas relative flex min-h-[60vh] flex-1 flex-col overflow-hidden rounded-2xl border border-cube-border bg-[radial-gradient(circle_at_center,_#1e222b_0%,_#0f1115_100%)] lg:min-h-[520px]"
         style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
       >
         {/* Top bar */}

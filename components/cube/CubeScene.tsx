@@ -11,7 +11,7 @@ export function CubeScene() {
   return (
     <div className="h-full w-full relative cube-canvas">
       <Canvas
-        camera={{ position: [4.4, 3.85, 6.05], fov: 45 }}
+        camera={{ position: [4.71, 4.12, 6.47], fov: 45 }}
         dpr={[1, 1.5]}
         gl={{ antialias: true, toneMapping: 3 /* ACESFilmic */ }}
         shadows

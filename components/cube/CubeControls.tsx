@@ -62,7 +62,7 @@ export function CubeControls() {
             type="button"
             onClick={solve}
             disabled={isSolving}
-            className="flex flex-col items-center justify-center gap-1.5 rounded-xl border border-cube-accent/40 bg-cube-accent/15 py-3 text-xs font-medium text-white transition-all hover:bg-cube-accent/25 active:scale-95 disabled:opacity-50"
+            className="flex flex-col items-center justify-center gap-1.5 rounded-xl border border-cube-border bg-cube-bg/85 py-3 text-xs font-medium text-white transition-all hover:bg-cube-border/30 active:scale-95 disabled:opacity-50"
           >
             {isSolving ? (
               <div className="h-4 w-4 animate-spin rounded-full border-2 border-cube-accent border-t-transparent" />
