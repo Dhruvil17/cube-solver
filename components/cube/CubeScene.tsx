@@ -2,6 +2,7 @@
 
 import { Canvas } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
+import * as THREE from "three";
 import { CubeModel } from "@/components/cube/CubeModel";
 import { useCubeStore } from "@/stores/cube-store";
 
@@ -14,7 +15,7 @@ export function CubeScene() {
         camera={{ position: [4.71, 4.12, 6.47], fov: 45 }}
         dpr={[1, 1.5]}
         gl={{ antialias: true, toneMapping: 3 /* ACESFilmic */ }}
-        shadows
+        shadows={{ type: THREE.PCFShadowMap }}
       >
         <color attach="background" args={["#0f1115"]} />
 
