@@ -15,7 +15,7 @@ export function PlayView() {
   }, [loadPersistedState]);
 
   return (
-    <div className="flex flex-1 flex-col gap-6 lg:flex-row">
+    <div className="flex flex-1 flex-col gap-6 lg:flex-row lg:items-start">
       {/* 3D Canvas Area */}
       <div className="relative flex flex-1 flex-col overflow-hidden rounded-2xl border border-cube-border bg-[radial-gradient(circle_at_center,_#1e222b_0%,_#0f1115_100%)] min-h-[60vh] lg:min-h-[550px]">
         

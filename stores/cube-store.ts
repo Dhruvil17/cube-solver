@@ -6,6 +6,7 @@ import {
   generateScramble,
   toFaceletString,
   FACELET_MAPPING,
+  isSolvedState,
 } from '@/lib/cube-core';
 import { audio } from '@/lib/audio';
 import Cube from 'cubejs';
@@ -184,6 +185,7 @@ export const useCubeStore = create<CubeStore>((set, get) => {
 
       audio.playClick(isMuted);
       const updatedCubies = applyMove(cubies, animatingMove);
+      const solved = isSolvedState(updatedCubies);
 
       let nextPlaybackIdx = playbackIndex;
       let nextPlaybackActive = isPlaybackActive;
@@ -202,14 +204,20 @@ export const useCubeStore = create<CubeStore>((set, get) => {
         cubies: updatedCubies,
         history: [...history, animatingMove],
         animatingMove: null,
-        playbackIndex: nextPlaybackIdx,
-        isPlaybackActive: nextPlaybackActive,
+        playbackIndex: solved ? -1 : nextPlaybackIdx,
+        isPlaybackActive: solved ? false : nextPlaybackActive,
+        playbackMoves: solved ? [] : playbackMoves,
       });
+
+      if (solved && !isPlaybackActive) {
+        // If solved manually (not through playback end), play solved chime
+        setTimeout(() => audio.playChime(get().isMuted), 150);
+      }
 
       get().savePersistedState();
 
       // If playing back and more moves are in the solution list, schedule the next turn
-      if (nextPlaybackActive && nextPlaybackIdx !== -1 && nextPlaybackIdx < playbackMoves.length) {
+      if (!solved && nextPlaybackActive && nextPlaybackIdx !== -1 && nextPlaybackIdx < playbackMoves.length) {
         const nextMove = playbackMoves[nextPlaybackIdx];
         set((state) => ({
           moveQueue: [...state.moveQueue, nextMove],
