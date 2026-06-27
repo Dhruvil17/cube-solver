@@ -4,8 +4,6 @@ A modern high-performance 3D Rubik's Cube simulator, notation tutorial and optim
 
 Live Site: [https://cube-vibe.vercel.app](https://cube-vibe.vercel.app)
 
----
-
 ## Features
 
 *   **Interactive 3D Simulator:** Premium WebGL graphics featuring natural drag-to-turn gestures, pinch-to-zoom and smooth orbital rotation controls.
@@ -14,8 +12,6 @@ Live Site: [https://cube-vibe.vercel.app](https://cube-vibe.vercel.app)
 *   **Clean Toon-Shaded Aesthetics:** Sleek 3D speedcube rendering with amazing outlines and a solid premium look.
 *   **Minimalist & SEO Optimized:** Centered layout landing page with semantic structure and dynamic sitemaps.
 
----
-
 ## Tech Stack
 
 *   **Framework:** Next.js 16 (App Router)
@@ -23,8 +19,6 @@ Live Site: [https://cube-vibe.vercel.app](https://cube-vibe.vercel.app)
 *   **State Management:** Zustand
 *   **Styling:** TailwindCSS 4
 *   **Icons:** Lucide React
-
----
 
 ## Getting Started
 
