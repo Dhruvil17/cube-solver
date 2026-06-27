@@ -1,8 +1,7 @@
 "use client";
 
-import { useRef, useEffect, useMemo } from "react";
+import { useRef, useEffect, useMemo, useCallback } from "react";
 import { useFrame, ThreeEvent, useThree } from "@react-three/fiber";
-import { RoundedBox } from "@react-three/drei";
 import * as THREE from "three";
 import { useCubeStore } from "@/stores/cube-store";
 import { FaceLetter, MoveLetter, FACE_COLORS, isCubieOnFace } from "@/lib/cube-core";
@@ -21,8 +20,8 @@ const ROTATION_CONFIGS: Record<MoveLetter, { axis: THREE.Vector3; direction: num
 };
 
 type FaceGesture = {
-  tangentA: THREE.Vector3; // e.g. world X for U/D faces
-  tangentB: THREE.Vector3; // e.g. world Z for U/D faces
+  tangentA: THREE.Vector3;
+  tangentB: THREE.Vector3;
 };
 
 const FACE_GESTURES: Record<FaceLetter, FaceGesture> = {
@@ -38,7 +37,7 @@ const SWIPE_THRESHOLD_PX = 24;
 
 const CUBIE_SIZE = 0.98;
 const PANEL_SIZE = 0.98;
-const PANEL_RADIUS = 0.06;
+const PANEL_RADIUS = 0.10;
 
 // Easing function for smooth animation snap
 function easeInOutCubic(t: number): number {
@@ -55,13 +54,71 @@ function worldDirToScreenDir(
   const a = originWorld.clone().project(camera);
   const b = originWorld.clone().add(dir).project(camera);
 
-  // NDC (-1..1) -> pixel space. Y is flipped because screen Y grows downward.
   const ax = (a.x * 0.5 + 0.5) * width;
   const ay = (-a.y * 0.5 + 0.5) * height;
   const bx = (b.x * 0.5 + 0.5) * width;
   const by = (-b.y * 0.5 + 0.5) * height;
 
   return new THREE.Vector2(bx - ax, by - ay);
+}
+
+function makeStickerShape(col: number, row: number): THREE.Shape {
+  const w = PANEL_SIZE;
+  const h = PANEL_SIZE;
+  const r = PANEL_RADIUS;
+  const x = -w / 2;
+  const y = -h / 2;
+
+  const inwardPlusX  = col === 0 || col === 1;
+  const inwardMinusX = col === 2 || col === 1;
+  const inwardPlusY  = row === 0 || row === 1;
+  const inwardMinusY = row === 2 || row === 1;
+
+  const rBL = inwardMinusX && inwardMinusY ? r : 0;
+  const rBR = inwardPlusX  && inwardMinusY ? r : 0;
+  const rTR = inwardPlusX  && inwardPlusY  ? r : 0;
+  const rTL = inwardMinusX && inwardPlusY  ? r : 0;
+
+  const shape = new THREE.Shape();
+
+  shape.moveTo(x + rBL, y);
+  shape.lineTo(x + w - rBR, y);
+  if (rBR > 0) shape.absarc(x + w - rBR, y + rBR, rBR, -Math.PI / 2, 0, false);
+  else shape.lineTo(x + w, y);
+  shape.lineTo(x + w, y + h - rTR);
+  if (rTR > 0) shape.absarc(x + w - rTR, y + h - rTR, rTR, 0, Math.PI / 2, false);
+  else shape.lineTo(x + w, y + h);
+  shape.lineTo(x + rTL, y + h);
+  if (rTL > 0) shape.absarc(x + rTL, y + h - rTL, rTL, Math.PI / 2, Math.PI, false);
+  else shape.lineTo(x, y + h);
+  shape.lineTo(x, y + rBL);
+  if (rBL > 0) shape.absarc(x + rBL, y + rBL, rBL, Math.PI, Math.PI * 1.5, false);
+  else shape.lineTo(x, y);
+
+  return shape;
+}
+
+function getStickerGrid(
+  faceDir: FaceLetter,
+  cx: number,
+  cy: number,
+  cz: number
+): [number, number] {
+  switch (faceDir) {
+    // U: shapeX=+worldX (inward+X when cx<0 → col=cx+1), shapeY=+worldZ (inward+Y when cz<0 → row=cz+1)
+    case "U": return [cx + 1, cz + 1];
+    // D: shapeX=+worldX (col=cx+1), shapeY=−worldZ (inward+Y when cz>0 → row=2−(cz+1))
+    case "D": return [cx + 1, 2 - (cz + 1)];
+    // F: shapeX=+worldX (col=cx+1), shapeY=+worldY (inward+Y when cy<0 → row=cy+1)
+    case "F": return [cx + 1, cy + 1];
+    // B: shapeX=−worldX (inward+X when cx>0 → col=2−(cx+1)), shapeY=+worldY (row=cy+1)
+    case "B": return [2 - (cx + 1), cy + 1];
+    // R: shapeX=−worldZ (inward+X when cz>0 → col=2−(cz+1)), shapeY=+worldY (row=cy+1)
+    case "R": return [2 - (cz + 1), cy + 1];
+    // L: shapeX=+worldZ (inward+X when cz<0 → col=cz+1), shapeY=+worldY (row=cy+1)
+    case "L": return [cz + 1, cy + 1];
+    default:  return [1, 1];
+  }
 }
 
 export function CubeModel() {
@@ -76,26 +133,17 @@ export function CubeModel() {
     setOrbitEnabled,
   } = useCubeStore();
 
-  const panelShape = useMemo(() => {
-    const shape = new THREE.Shape();
-    const w = PANEL_SIZE;
-    const h = PANEL_SIZE;
-    const r = PANEL_RADIUS;
-    const x = -w / 2;
-    const y = -h / 2;
+  const makeStickerShapeCb = useCallback(makeStickerShape, []);
 
-    shape.moveTo(x + r, y);
-    shape.lineTo(x + w - r, y);
-    shape.absarc(x + w - r, y + r, r, -Math.PI / 2, 0, false);
-    shape.lineTo(x + w, y + h - r);
-    shape.absarc(x + w - r, y + h - r, r, 0, Math.PI / 2, false);
-    shape.lineTo(x + r, y + h);
-    shape.absarc(x + r, y + h - r, r, Math.PI / 2, Math.PI, false);
-    shape.lineTo(x, y + r);
-    shape.absarc(x + r, y + r, r, Math.PI, Math.PI * 1.5, false);
-
-    return shape;
-  }, []);
+  const stickerShapes = useMemo(() => {
+    const shapes: Record<string, THREE.Shape> = {};
+    for (let col = 0; col < 3; col++) {
+      for (let row = 0; row < 3; row++) {
+        shapes[`${col},${row}`] = makeStickerShapeCb(col, row);
+      }
+    }
+    return shapes;
+  }, [makeStickerShapeCb]);
 
   const { controls, camera, size } = useThree() as {
     controls: any;
@@ -104,14 +152,12 @@ export function CubeModel() {
   };
 
   // Stable ref map: cubieId -> THREE.Group
-  // This survives re-renders and position changes
   const meshById = useRef<Map<string, THREE.Group>>(new Map());
 
   // Animation progress ref (0 → 1)
   const animProgress = useRef(0);
 
-  // Reused quaternion for the active animation, rebuilt only when the
-  // target angle changes (once per frame, not once per cubie).
+  // Reused quaternion for the active animation
   const animQuat = useRef(new THREE.Quaternion());
 
   // Keyboard shortcuts
@@ -147,19 +193,13 @@ export function CubeModel() {
     cx: number;
     cy: number;
     cz: number;
-    // Screen-space pixel coords where the drag started
     screenX: number;
     screenY: number;
-    // World position of the cubie at drag start — used as the projection
-    // origin for the face tangents, so the screen-space directions are
-    // computed at the right point in the scene (matters under perspective).
     worldOrigin: THREE.Vector3;
   } | null>(null);
 
   const livePointer = useRef<{ x: number; y: number } | null>(null);
 
-  // Releases the drag state and restores orbit controls. Shared by
-  // pointerup AND pointercancel so we never get stuck with orbit disabled.
   const releaseDrag = () => {
     if (dragStartInfo.current) {
       dragStartInfo.current = null;
@@ -191,7 +231,7 @@ export function CubeModel() {
 
   // ─── ANIMATION FRAME LOOP ────────────────────────────────────────────────────
   useFrame((state, delta) => {
-    // ── Real-time Drag / Swipe detection (camera-relative, screen-space) ──
+    // ── Real-time Drag / Swipe detection ──
     const startInfo = dragStartInfo.current;
     if (startInfo && !animatingMove && livePointer.current) {
       const curX = livePointer.current.x;
@@ -205,35 +245,23 @@ export function CubeModel() {
         const { face, cx, cy, cz, worldOrigin } = startInfo;
         const gesture = FACE_GESTURES[face];
 
-        // Project both in-plane world tangents into current screen space.
-        // Recomputed every time a drag resolves, so this is correct for
-        // whatever angle the camera is currently at — including tilted,
-        // bottom, or corner views.
         const screenA = worldDirToScreenDir(gesture.tangentA, worldOrigin, camera, size.width, size.height);
         const screenB = worldDirToScreenDir(gesture.tangentB, worldOrigin, camera, size.width, size.height);
 
         const drag = new THREE.Vector2(screenDX, screenDY);
 
-        // Dot the drag against each (normalized) screen tangent to find
-        // which world axis the user's swipe is actually most aligned with
-        // on screen right now, and in which sign along that axis.
         const dotA = screenA.lengthSq() > 0 ? drag.dot(screenA.clone().normalize()) : 0;
         const dotB = screenB.lengthSq() > 0 ? drag.dot(screenB.clone().normalize()) : 0;
 
         const alongA = Math.abs(dotA) >= Math.abs(dotB);
-        // signPositive: true means the drag moved in the *positive* world
-        // direction of the dominant tangent (tangentA or tangentB).
         const signPositive = alongA ? dotA > 0 : dotB > 0;
 
         let detectedMove: string | null = null;
 
         if (face === "U") {
           if (alongA) {
-            // tangentA = world +X. Swiping along +X on an up-facing layer
-            // turns U the same way the old code intended.
             detectedMove = signPositive ? "U'" : "U";
           } else {
-            // tangentB = world +Z.
             const isFront = signPositive;
             if (cx > 0) detectedMove = isFront ? "R'" : "R";
             else if (cx < 0) detectedMove = isFront ? "L" : "L'";
@@ -299,7 +327,6 @@ export function CubeModel() {
         }
 
         if (detectedMove) {
-          // TEMP DEBUG — remove after diagnosing the swipe issue.
           queueMoves([detectedMove]);
           releaseDrag();
         }
@@ -311,7 +338,6 @@ export function CubeModel() {
       if (moveQueue.length > 0) {
         startAnimatingNext();
       }
-      // Nothing else to do — meshes already in correct positions from last finishAnimatingMove
       return;
     }
 
@@ -335,19 +361,13 @@ export function CubeModel() {
     const eased = easeInOutCubic(animProgress.current);
     const currentAngle = targetAngle * eased;
 
-    // Built once per frame (not once per cubie) since it's identical for
-    // every cubie on this face during this animation step.
     animQuat.current.setFromAxisAngle(axis, currentAngle);
 
-    // Apply rotation to mesh groups for cubies on this face
-    // We use the CURRENT logical state from the store to determine which cubies
-    // are on this face (based on their pre-animation logical coords)
     cubies.forEach((cubie) => {
       const mesh = meshById.current.get(cubie.id);
       if (!mesh) return;
 
       if (isCubieOnFace(cubie, moveFace)) {
-        // Orbit around face axis
         const posVector = new THREE.Vector3(cubie.x, cubie.y, cubie.z);
         posVector.applyAxisAngle(axis, currentAngle);
         mesh.position.copy(posVector);
@@ -355,19 +375,14 @@ export function CubeModel() {
       }
     });
 
-    // Animation complete
     if (animProgress.current >= 1) {
       animProgress.current = 0;
       finishAnimatingMove();
     }
   });
 
-  // ─── SYNC MESH POSITIONS after store update (non-animating cubies) ────────
-  // After finishAnimatingMove, cubies array is updated with new logical coords.
-  // We reset all mesh positions to match new logical state.
-  // This runs as a layout effect when cubies change (i.e., after each move commit).
+  // ─── SYNC MESH POSITIONS after store update ───────────────────────────────
   useEffect(() => {
-    // Only sync when we're NOT mid-animation
     if (animatingMove) return;
     cubies.forEach((cubie) => {
       const mesh = meshById.current.get(cubie.id);
@@ -444,10 +459,13 @@ export function CubeModel() {
                 else if (faceDir === "F") { pos = [0, 0, panelOut]; rot = [0, 0, 0]; }
                 else if (faceDir === "B") { pos = [0, 0, -panelOut]; rot = [0, Math.PI, 0]; }
 
+                const [col, row] = getStickerGrid(faceDir, cubie.x, cubie.y, cubie.z);
+                const stickerShape = stickerShapes[`${col},${row}`];
+
                 return (
                   <group key={faceDir} position={pos} rotation={rot}>
                     <mesh>
-                      <shapeGeometry args={[panelShape]} />
+                      <shapeGeometry args={[stickerShape]} />
                       <meshToonMaterial color={color} side={THREE.DoubleSide} />
                     </mesh>
                     <mesh
