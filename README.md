@@ -2,8 +2,6 @@
 
 A modern high-performance 3D Rubik's Cube simulator, notation tutorial and optimal solver built with Next.js, Three.js and TailwindCSS.
 
-Live Site: [https://cube-vibe.vercel.app](https://cube-vibe.vercel.app)
-
 ## Features
 
 *   **Interactive 3D Simulator:** Premium WebGL graphics featuring natural drag-to-turn gestures, pinch-to-zoom and smooth orbital rotation controls.
