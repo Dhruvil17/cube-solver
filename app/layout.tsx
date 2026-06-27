@@ -26,6 +26,9 @@ export const metadata: Metadata = {
     siteName: siteConfig.name,
     type: "website",
   },
+  verification: {
+    google: "google07f5cd7bc6f96912",
+  },
 };
 
 export default function RootLayout({
