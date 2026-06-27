@@ -14,6 +14,10 @@ class SoundSynth {
     return this.ctx;
   }
 
+  private isMobile(): boolean {
+    return /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+  }
+
   // Bold single-oscillator speedcube turn click. ~80ms total.
   playClick(muted: boolean) {
     if (muted) return;
@@ -34,7 +38,7 @@ class SoundSynth {
     // Attack: 4ms linear rise so it doesn't click/pop on start
     // Decay: exponential drop — punchy not sustained
     gain.gain.setValueAtTime(0, t);
-    gain.gain.linearRampToValueAtTime(0.65, t + 0.004);
+    gain.gain.linearRampToValueAtTime(this.isMobile() ? 1 : 0.65, t + 0.004);
     gain.gain.exponentialRampToValueAtTime(0.001, t + 0.07);
 
     osc.connect(gain);
