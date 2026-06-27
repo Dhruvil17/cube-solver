@@ -33,10 +33,3 @@ Start the hot-reloading development server locally:
 ```bash
 npm run dev
 ```
-Open [http://localhost:3000](http://localhost:3000) in your browser to view the application.
-
-### 3. Production Build
-Verify code types and compile the optimized production bundle:
-```bash
-npm run build
-```
