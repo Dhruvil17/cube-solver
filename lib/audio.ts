@@ -3,163 +3,120 @@ class SoundSynth {
 
   private initCtx() {
     if (!this.ctx) {
-      // Safe initialization of AudioContext on client
       const AudioCtx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
       if (AudioCtx) {
         this.ctx = new AudioCtx();
       }
     }
-    // Resume context if suspended (browser security)
     if (this.ctx && this.ctx.state === 'suspended') {
       this.ctx.resume();
     }
     return this.ctx;
   }
 
-  // Synthesize a natural "plastic turn click" (~50ms)
+  // Bold single-oscillator speedcube turn click. ~80ms total.
   playClick(muted: boolean) {
     if (muted) return;
     const ctx = this.initCtx();
     if (!ctx) return;
 
-    const time = ctx.currentTime;
+    const t = ctx.currentTime;
+
+    // Single triangle wave: starts at 210 Hz and drops to 60 Hz over 60ms.
+    // Triangle is warmer than sine, less buzzy than sawtooth — feels solid.
     const osc = ctx.createOscillator();
-    const noise = ctx.createBufferSource();
-    const filter = ctx.createBiquadFilter();
     const gain = ctx.createGain();
 
-    // 1. Core pop frequency (triangle wave)
     osc.type = 'triangle';
-    osc.frequency.setValueAtTime(140, time);
-    osc.frequency.exponentialRampToValueAtTime(40, time + 0.05);
+    osc.frequency.setValueAtTime(210, t);
+    osc.frequency.exponentialRampToValueAtTime(60, t + 0.06);
 
-    // 2. High-frequency click noise
-    const bufferSize = ctx.sampleRate * 0.02; // 20ms of noise
-    const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
-    const data = buffer.getChannelData(0);
-    for (let i = 0; i < bufferSize; i++) {
-      data[i] = Math.random() * 2 - 1;
-    }
-    noise.buffer = buffer;
+    // Attack: 4ms linear rise so it doesn't click/pop on start
+    // Decay: exponential drop — punchy not sustained
+    gain.gain.setValueAtTime(0, t);
+    gain.gain.linearRampToValueAtTime(0.65, t + 0.004);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.07);
 
-    // Filter noise to high click frequencies
-    filter.type = 'bandpass';
-    filter.frequency.value = 2200;
-    filter.Q.value = 4;
-
-    // Envelope
-    gain.gain.setValueAtTime(0.18, time);
-    gain.gain.exponentialRampToValueAtTime(0.001, time + 0.04);
-
-    // Connections
     osc.connect(gain);
-    noise.connect(filter);
-    filter.connect(gain);
     gain.connect(ctx.destination);
-
-    // Start & Stop
-    osc.start(time);
-    osc.stop(time + 0.05);
-    noise.start(time);
-    noise.stop(time + 0.05);
-
-    osc.onended = () => {
-      osc.disconnect();
-      gain.disconnect();
-    };
-    noise.onended = () => {
-      noise.disconnect();
-      filter.disconnect();
-    };
+    osc.start(t);
+    osc.stop(t + 0.08);
+    osc.onended = () => { osc.disconnect(); gain.disconnect(); };
   }
 
-  // Synthesize a quick "whoosh" sweep for scrambles
+  // Scramble whoosh
   playWhoosh(muted: boolean) {
     if (muted) return;
     const ctx = this.initCtx();
     if (!ctx) return;
 
-    const time = ctx.currentTime;
+    const t = ctx.currentTime;
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
 
     osc.type = 'sine';
-    osc.frequency.setValueAtTime(450, time);
-    osc.frequency.exponentialRampToValueAtTime(100, time + 0.25);
+    osc.frequency.setValueAtTime(450, t);
+    osc.frequency.exponentialRampToValueAtTime(100, t + 0.25);
 
-    gain.gain.setValueAtTime(0.1, time);
-    gain.gain.exponentialRampToValueAtTime(0.001, time + 0.25);
+    gain.gain.setValueAtTime(0.1, t);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.25);
 
     osc.connect(gain);
     gain.connect(ctx.destination);
-
-    osc.start(time);
-    osc.stop(time + 0.25);
-
-    osc.onended = () => {
-      osc.disconnect();
-      gain.disconnect();
-    };
+    osc.start(t);
+    osc.stop(t + 0.25);
+    osc.onended = () => { osc.disconnect(); gain.disconnect(); };
   }
 
-  // Synthesize a soft chime for solving success
+  // Solve success chime
   playChime(muted: boolean) {
     if (muted) return;
     const ctx = this.initCtx();
     if (!ctx) return;
 
-    const time = ctx.currentTime;
+    const t = ctx.currentTime;
     const gain = ctx.createGain();
-    gain.gain.setValueAtTime(0.08, time);
-    gain.gain.exponentialRampToValueAtTime(0.001, time + 0.8);
+    gain.gain.setValueAtTime(0.08, t);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.8);
     gain.connect(ctx.destination);
 
-    // Play a Major Third harmony (C5: 523.25Hz, E5: 659.25Hz, G5: 783.99Hz)
     const freqs = [523.25, 659.25, 783.99];
     freqs.forEach((freq, idx) => {
       const osc = ctx.createOscillator();
       osc.type = 'sine';
-      osc.frequency.setValueAtTime(freq, time + idx * 0.06); // Arpeggiated entry
+      osc.frequency.setValueAtTime(freq, t + idx * 0.06);
       osc.connect(gain);
-      osc.start(time + idx * 0.06);
-      osc.stop(time + 0.8);
-
+      osc.start(t + idx * 0.06);
+      osc.stop(t + 0.8);
       osc.onended = () => {
         osc.disconnect();
-        if (idx === freqs.length - 1) {
-          gain.disconnect();
-        }
+        if (idx === freqs.length - 1) gain.disconnect();
       };
     });
   }
 
-  // UI button click
+  // UI button tick
   playTick(muted: boolean) {
     if (muted) return;
     const ctx = this.initCtx();
     if (!ctx) return;
 
-    const time = ctx.currentTime;
+    const t = ctx.currentTime;
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
 
     osc.type = 'sine';
-    osc.frequency.setValueAtTime(800, time);
-    osc.frequency.setValueAtTime(1200, time + 0.01);
+    osc.frequency.setValueAtTime(800, t);
+    osc.frequency.setValueAtTime(1200, t + 0.01);
 
-    gain.gain.setValueAtTime(0.02, time);
-    gain.gain.exponentialRampToValueAtTime(0.001, time + 0.02);
+    gain.gain.setValueAtTime(0.02, t);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.02);
 
     osc.connect(gain);
     gain.connect(ctx.destination);
-
-    osc.start(time);
-    osc.stop(time + 0.02);
-
-    osc.onended = () => {
-      osc.disconnect();
-      gain.disconnect();
-    };
+    osc.start(t);
+    osc.stop(t + 0.02);
+    osc.onended = () => { osc.disconnect(); gain.disconnect(); };
   }
 }
 
