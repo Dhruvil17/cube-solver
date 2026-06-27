@@ -1,6 +1,5 @@
 import { Sparkles, Volume2, Smartphone, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { HeroPreviewCard } from "@/components/cube/hero-preview-card";
 import { siteConfig } from "@/lib/site";
 
 const highlights = [
@@ -30,29 +29,36 @@ export function Hero() {
   return (
     <section className="relative overflow-hidden">
       <div
-        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_50%_-20%,rgba(99,102,241,0.18),transparent)]"
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_50%_-20%,rgba(99,102,241,0.15),transparent)]"
         aria-hidden
       />
-      <div className="relative mx-auto max-w-7xl px-4 pb-16 pt-16 sm:px-6 sm:pt-24 lg:px-8 lg:pt-28">
+      <div className="relative mx-auto max-w-7xl px-4 py-24 sm:px-6 lg:px-8 lg:py-36">
         <div className="mx-auto max-w-3xl text-center">
-          <h1 className="text-4xl font-bold tracking-tight text-white sm:text-5xl lg:text-6xl">
+          <h1 className="text-4xl font-extrabold tracking-tight text-white sm:text-5xl lg:text-6xl">
             Scramble. Play.{" "}
             <span className="text-cube-accent">Solve.</span>
           </h1>
           <p className="mx-auto mt-6 max-w-2xl text-lg text-cube-muted sm:text-xl">
             {siteConfig.description}
           </p>
-          <div className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row">
-            <Button href={siteConfig.links.play} size="lg">
-              Open Cube Playground
+          <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
+            <Button
+              href={siteConfig.links.play}
+              size="lg"
+              className="w-full sm:w-auto px-8 py-4 font-bold shadow-lg shadow-cube-accent/20 hover:shadow-cube-accent/30 transition-all duration-200"
+            >
+              Start Solving
             </Button>
-            <Button href={siteConfig.links.learn} variant="secondary" size="lg">
+            <Button
+              href={siteConfig.links.learn}
+              variant="secondary"
+              size="lg"
+              className="w-full sm:w-auto px-8 py-4 font-medium transition-all duration-200"
+            >
               Learn Notation
             </Button>
           </div>
         </div>
-
-        <HeroPreviewCard />
       </div>
     </section>
   );

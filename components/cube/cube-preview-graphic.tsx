@@ -1,61 +1,83 @@
-import { WCA_COLORS } from "@/types";
-
 const STICKER = 28;
-const GAP = 3;
+const GAP = 1.2;
 const FACE = STICKER * 3 + GAP * 2;
 const HALF = FACE / 2;
 
+const COLORS = {
+  white: '#FFFFFF',
+  yellow: '#FFD500',
+  red: '#B71234',
+  orange: '#FF5800',
+  green: '#009B48',
+  blue: '#0046AD',
+};
+
 /** Scrambled-looking sticker colors per visible face (U, F, R) */
 const SCRAMBLE_U = [
-  WCA_COLORS.white,
-  WCA_COLORS.red,
-  WCA_COLORS.blue,
-  WCA_COLORS.orange,
-  WCA_COLORS.yellow,
-  WCA_COLORS.green,
-  WCA_COLORS.white,
-  WCA_COLORS.red,
-  WCA_COLORS.green,
+  COLORS.white,
+  COLORS.red,
+  COLORS.blue,
+  COLORS.orange,
+  COLORS.yellow,
+  COLORS.green,
+  COLORS.white,
+  COLORS.red,
+  COLORS.green,
 ];
 
 const SCRAMBLE_F = [
-  WCA_COLORS.green,
-  WCA_COLORS.white,
-  WCA_COLORS.yellow,
-  WCA_COLORS.blue,
-  WCA_COLORS.red,
-  WCA_COLORS.orange,
-  WCA_COLORS.green,
-  WCA_COLORS.white,
-  WCA_COLORS.blue,
+  COLORS.green,
+  COLORS.white,
+  COLORS.yellow,
+  COLORS.blue,
+  COLORS.red,
+  COLORS.orange,
+  COLORS.green,
+  COLORS.white,
+  COLORS.blue,
 ];
 
 const SCRAMBLE_R = [
-  WCA_COLORS.red,
-  WCA_COLORS.yellow,
-  WCA_COLORS.orange,
-  WCA_COLORS.white,
-  WCA_COLORS.blue,
-  WCA_COLORS.green,
-  WCA_COLORS.red,
-  WCA_COLORS.orange,
-  WCA_COLORS.yellow,
+  COLORS.red,
+  COLORS.yellow,
+  COLORS.orange,
+  COLORS.white,
+  COLORS.blue,
+  COLORS.green,
+  COLORS.red,
+  COLORS.orange,
+  COLORS.yellow,
 ];
+
+function getStickerBorderRadius(i: number): string {
+  const r = "1.5px";
+  if (i === 0) return `0px 0px ${r} 0px`;
+  if (i === 2) return `0px 0px 0px ${r}`;
+  if (i === 4) return r;
+  if (i === 6) return `0px ${r} 0px 0px`;
+  if (i === 8) return `${r} 0px 0px 0px`;
+  return "0px";
+}
 
 function FaceGrid({ colors }: { colors: string[] }) {
   return (
     <div
-      className="grid grid-cols-3 gap-[3px] rounded-sm bg-black/40 p-[3px]"
-      style={{ width: FACE, height: FACE }}
+      className="grid grid-cols-3 bg-[#1a1a1a]"
+      style={{
+        width: FACE,
+        height: FACE,
+        gap: GAP,
+        padding: GAP,
+      }}
     >
       {colors.map((color, i) => (
         <div
           key={i}
-          className="rounded-[3px] shadow-[inset_0_1px_0_rgba(255,255,255,0.35),0_2px_4px_rgba(0,0,0,0.35)]"
           style={{
             width: STICKER,
             height: STICKER,
             backgroundColor: color,
+            borderRadius: getStickerBorderRadius(i),
           }}
         />
       ))}
