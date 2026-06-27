@@ -16,14 +16,13 @@ export interface Cubie {
 export type FaceLetter = 'U' | 'D' | 'R' | 'L' | 'F' | 'B';
 export type MoveLetter = FaceLetter | 'M' | 'E' | 'S';
 
-// Vivid WCA-accurate sticker colors
 export const FACE_COLORS: Record<FaceLetter, string> = {
-  U: '#f4f4f4', // Near-white (slightly warm)
-  D: '#ffd500', // Vivid WCA Yellow
-  R: '#e8271a', // WCA Red
-  L: '#ff6b1a', // WCA Orange
-  F: '#0eaa4e', // WCA Green
-  B: '#1c5cdb', // WCA Blue
+  U: '#FFFFFF',
+  D: '#FFD500',
+  R: '#B71234',
+  L: '#FF5800',
+  F: '#009B48',
+  B: '#0046AD',
 };
 
 

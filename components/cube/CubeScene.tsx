@@ -14,35 +14,36 @@ export function CubeScene() {
       <Canvas
         camera={{ position: [4.71, 4.12, 6.47], fov: 45 }}
         dpr={[1, 1.5]}
-        gl={{ antialias: true, toneMapping: 3 /* ACESFilmic */ }}
+        gl={{ antialias: true, toneMapping: THREE.ACESFilmicToneMapping }}
         shadows={{ type: THREE.PCFShadowMap }}
       >
         <color attach="background" args={["#0f1115"]} />
 
-        {/* Key light — bright white from upper-left front */}
         <directionalLight
           position={[6, 8, 6]}
-          intensity={3.5}
+          intensity={1.4}
           color="#ffffff"
           castShadow
         />
 
-        {/* Fill light — soft warm from the right */}
         <directionalLight
           position={[-5, 4, 3]}
-          intensity={1.8}
+          intensity={0.7}
           color="#ffe4b5"
         />
 
-        {/* Back rim light — blue-indigo to separate cube from background */}
         <directionalLight
           position={[0, -4, -8]}
-          intensity={1.2}
+          intensity={0.5}
           color="#818cf8"
         />
 
-        {/* Ambient base — prevents pure black shadows */}
-        <ambientLight intensity={0.35} />
+        <directionalLight
+          position={[-2, -7, -2]}
+          intensity={0.9}
+          color="#ffffff"
+        />
+        <ambientLight intensity={0.55} />
 
         {/* 3D Rubik's Cube Model */}
         <CubeModel />

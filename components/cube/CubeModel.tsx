@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useEffect } from "react";
+import { useRef, useEffect, useMemo } from "react";
 import { useFrame, ThreeEvent, useThree } from "@react-three/fiber";
 import { RoundedBox } from "@react-three/drei";
 import * as THREE from "three";
@@ -20,18 +20,6 @@ const ROTATION_CONFIGS: Record<MoveLetter, { axis: THREE.Vector3; direction: num
   S: { axis: new THREE.Vector3(0, 0, 1), direction: -1 },
 };
 
-// For each face, the two in-plane "tangent" directions we care about,
-// expressed as world-space unit vectors, plus the move each tangent
-// produces when swiped in its positive / negative direction.
-// This replaces the old hardcoded world-axis comparisons (displacement.x/y/z)
-// which broke once the camera was orbited away from the default angle.
-//
-// tangentA / tangentB are just two perpendicular in-plane axes for the face.
-// "posMove" / "negMove" describe what happens when the drag lands mostly along
-// that tangent, in its positive or negative world direction. The actual
-// left/right/up/down decision is made in screen space (see useFrame below);
-// these are only used to figure out, for the *current* camera, which way
-// each world tangent currently projects on screen.
 type FaceGesture = {
   tangentA: THREE.Vector3; // e.g. world X for U/D faces
   tangentB: THREE.Vector3; // e.g. world Z for U/D faces
@@ -46,22 +34,17 @@ const FACE_GESTURES: Record<FaceLetter, FaceGesture> = {
   L: { tangentA: new THREE.Vector3(0, 0, 1), tangentB: new THREE.Vector3(0, 1, 0) },
 };
 
-// Minimum swipe distance in CSS pixels before we commit to a move.
-// Replaces the old hardcoded 0.35 world-unit threshold, which scaled
-// incorrectly with zoom (felt different depending on how far the camera
-// had been dollied in/out).
 const SWIPE_THRESHOLD_PX = 24;
+
+const CUBIE_SIZE = 0.98;
+const PANEL_SIZE = 0.98;
+const PANEL_RADIUS = 0.06;
 
 // Easing function for smooth animation snap
 function easeInOutCubic(t: number): number {
   return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
 }
 
-// Projects a world-space direction vector to a 2D screen-space direction
-// (in pixels, unnormalized) for the given camera + canvas size.
-// We do this by projecting two points (origin and origin+dir) and taking
-// the difference, rather than trying to transform the direction directly,
-// so it correctly accounts for perspective projection.
 function worldDirToScreenDir(
   dir: THREE.Vector3,
   originWorld: THREE.Vector3,
@@ -92,6 +75,27 @@ export function CubeModel() {
     queueMoves,
     setOrbitEnabled,
   } = useCubeStore();
+
+  const panelShape = useMemo(() => {
+    const shape = new THREE.Shape();
+    const w = PANEL_SIZE;
+    const h = PANEL_SIZE;
+    const r = PANEL_RADIUS;
+    const x = -w / 2;
+    const y = -h / 2;
+
+    shape.moveTo(x + r, y);
+    shape.lineTo(x + w - r, y);
+    shape.absarc(x + w - r, y + r, r, -Math.PI / 2, 0, false);
+    shape.lineTo(x + w, y + h - r);
+    shape.absarc(x + w - r, y + h - r, r, 0, Math.PI / 2, false);
+    shape.lineTo(x + r, y + h);
+    shape.absarc(x + r, y + h - r, r, Math.PI / 2, Math.PI, false);
+    shape.lineTo(x, y + r);
+    shape.absarc(x + r, y + r, r, Math.PI, Math.PI * 1.5, false);
+
+    return shape;
+  }, []);
 
   const { controls, camera, size } = useThree() as {
     controls: any;
@@ -152,13 +156,6 @@ export function CubeModel() {
     worldOrigin: THREE.Vector3;
   } | null>(null);
 
-  // Live current pointer position in CSS pixels, updated directly from the
-  // native pointermove event. We deliberately do NOT use R3F's state.pointer
-  // here — that value is only refreshed by R3F's own internal pointer
-  // handling on its render cycle, and was observed going stale/lagging
-  // during fast or short drags, which made every swipe resolve to the same
-  // screenDX regardless of the actual gesture. Tracking it ourselves from
-  // the raw browser event removes that indirection entirely.
   const livePointer = useRef<{ x: number; y: number } | null>(null);
 
   // Releases the drag state and restores orbit controls. Shared by
@@ -173,14 +170,6 @@ export function CubeModel() {
     }
   };
 
-  // Global pointerup/pointercancel listeners to safely clean up drag start info.
-  // pointercancel matters on touch devices: an interrupted gesture (OS
-  // swipe-back, incoming multi-touch, app switch) fires pointercancel, not
-  // pointerup. Without handling it, orbit stays disabled until another tap.
-  //
-  // Also tracks a native pointermove listener so we have an always-fresh
-  // raw pointer position to diff against, instead of relying on R3F's
-  // internally-throttled state.pointer (see livePointer comment above).
   useEffect(() => {
     const handlePointerMove = (e: PointerEvent) => {
       livePointer.current = { x: e.clientX, y: e.clientY };
@@ -432,56 +421,42 @@ export function CubeModel() {
             }}
             position={[cubie.x, cubie.y, cubie.z]}
           >
-            {/* Core dark plastic body */}
-            <RoundedBox args={[0.96, 0.96, 0.96]} radius={0.055} smoothness={6}>
-              <meshStandardMaterial color="#090909" roughness={0.35} metalness={0.25} />
-            </RoundedBox>
+            <mesh>
+              <boxGeometry args={[CUBIE_SIZE, CUBIE_SIZE, CUBIE_SIZE]} />
+              <meshStandardMaterial color="#1a1a1a" roughness={0.55} metalness={0.05} />
+            </mesh>
 
-            {/* Sticker panels — raised, vivid, glowing */}
             {(Object.entries(cubie.colors) as [FaceLetter, string | null][]).map(
               ([faceDir, colorCode]) => {
                 if (!colorCode) return null;
 
                 const color = FACE_COLORS[colorCode as FaceLetter];
-                const W = 0.87;
-                const T = 0.024; // slab thickness
-                const out = 0.505; // raised above body face
+
+                const panelOut = CUBIE_SIZE / 2 + 0.002;
 
                 let pos: [number, number, number] = [0, 0, 0];
                 let rot: [number, number, number] = [0, 0, 0];
 
-                if (faceDir === "U") { pos = [0, out, 0]; rot = [Math.PI / 2, 0, 0]; }
-                else if (faceDir === "D") { pos = [0, -out, 0]; rot = [-Math.PI / 2, 0, 0]; }
-                else if (faceDir === "R") { pos = [out, 0, 0]; rot = [0, Math.PI / 2, 0]; }
-                else if (faceDir === "L") { pos = [-out, 0, 0]; rot = [0, -Math.PI / 2, 0]; }
-                else if (faceDir === "F") { pos = [0, 0, out]; rot = [0, 0, 0]; }
-                else if (faceDir === "B") { pos = [0, 0, -out]; rot = [0, Math.PI, 0]; }
+                if (faceDir === "U") { pos = [0, panelOut, 0]; rot = [Math.PI / 2, 0, 0]; }
+                else if (faceDir === "D") { pos = [0, -panelOut, 0]; rot = [-Math.PI / 2, 0, 0]; }
+                else if (faceDir === "R") { pos = [panelOut, 0, 0]; rot = [0, Math.PI / 2, 0]; }
+                else if (faceDir === "L") { pos = [-panelOut, 0, 0]; rot = [0, -Math.PI / 2, 0]; }
+                else if (faceDir === "F") { pos = [0, 0, panelOut]; rot = [0, 0, 0]; }
+                else if (faceDir === "B") { pos = [0, 0, -panelOut]; rot = [0, Math.PI, 0]; }
 
                 return (
-                  <group key={faceDir}>
-                    {/* Colored sticker */}
-                    <mesh
-                      position={pos}
-                      rotation={rot}
-                    >
-                      <boxGeometry args={[W, W, T]} />
-                      <meshStandardMaterial
-                        color={color}
-                        emissive={color}
-                        emissiveIntensity={0.2}
-                        roughness={0.06}
-                        metalness={0.0}
-                      />
+                  <group key={faceDir} position={pos} rotation={rot}>
+                    <mesh>
+                      <shapeGeometry args={[panelShape]} />
+                      <meshToonMaterial color={color} side={THREE.DoubleSide} />
                     </mesh>
-                    {/* Invisible full-face hit plane — covers entire cubie face including black gaps */}
                     <mesh
-                      position={pos}
-                      rotation={rot}
+                      position={[0, 0, 0.001]}
                       onPointerDown={(e) =>
                         handlePointerDown(e, cubie.id, faceDir, cubie.x, cubie.y, cubie.z)
                       }
                     >
-                      <planeGeometry args={[0.98, 0.98]} />
+                      <planeGeometry args={[1, 1]} />
                       <meshBasicMaterial visible={false} side={2} />
                     </mesh>
                   </group>
