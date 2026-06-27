@@ -6,7 +6,7 @@ const highlights = [
   {
     icon: Sparkles,
     title: "Real 3D WebGL",
-    description: "Glossy speedcube look with smooth layer animations — not flat CSS.",
+    description: "Glossy speedcube look with smooth layer animations.",
   },
   {
     icon: Smartphone,

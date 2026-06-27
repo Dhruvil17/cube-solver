@@ -27,7 +27,7 @@ class SoundSynth {
     const t = ctx.currentTime;
 
     // Single triangle wave: starts at 210 Hz and drops to 60 Hz over 60ms.
-    // Triangle is warmer than sine, less buzzy than sawtooth — feels solid.
+    // Triangle is warmer than sine, less buzzy than sawtooth which feels solid.
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
 
@@ -36,7 +36,7 @@ class SoundSynth {
     osc.frequency.exponentialRampToValueAtTime(60, t + 0.06);
 
     // Attack: 4ms linear rise so it doesn't click/pop on start
-    // Decay: exponential drop — punchy not sustained
+    // Decay: exponential drop (punchy, not sustained)
     gain.gain.setValueAtTime(0, t);
     gain.gain.linearRampToValueAtTime(this.isMobile() ? 1 : 0.65, t + 0.004);
     gain.gain.exponentialRampToValueAtTime(0.001, t + 0.07);
