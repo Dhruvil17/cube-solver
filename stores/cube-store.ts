@@ -6,7 +6,7 @@ import {
   generateScramble,
   toFaceletString,
   FACELET_MAPPING,
-  isSolvedState,
+  isVisuallySolved,
 } from '@/lib/cube-core';
 import { audio } from '@/lib/audio';
 import Cube from 'cubejs';
@@ -96,7 +96,7 @@ function getWorker(onReady: () => void, onSolution: (moves: string[]) => void, o
       };
       solverWorker.postMessage({ type: 'init' });
     } catch (err) {
-      console.warn('Worker instantiation failed. Falling back to main-thread solving.', err);
+      console.log('Worker instantiation failed. Falling back to main-thread solving.', err);
     }
   }
   return solverWorker;
@@ -110,7 +110,7 @@ export const useCubeStore = create<CubeStore>((set, get) => {
     get().savePersistedState();
   };
   const workerError = (err: string) => {
-    console.error('Web worker solver error:', err);
+    console.log('Web worker solver error:', err);
     set({ isSolving: false });
   };
 
@@ -185,7 +185,7 @@ export const useCubeStore = create<CubeStore>((set, get) => {
 
       audio.playClick(isMuted);
       const updatedCubies = applyMove(cubies, animatingMove);
-      const solved = isSolvedState(updatedCubies);
+      const solved = isVisuallySolved(updatedCubies);
 
       let nextPlaybackIdx = playbackIndex;
       let nextPlaybackActive = isPlaybackActive;
@@ -233,7 +233,7 @@ export const useCubeStore = create<CubeStore>((set, get) => {
       const faceletString = toFaceletString(cubies);
       
       // If it's already solved, don't trigger solver
-      if (faceletString === 'UUUUUUUUURRRRRRRRRFFFFFFFFFDDDDDDDDDLLLLLLLLLBBBBBBBBB') {
+      if (isVisuallySolved(cubies)) {
         audio.playChime(get().isMuted);
         return;
       }
@@ -270,7 +270,7 @@ export const useCubeStore = create<CubeStore>((set, get) => {
         try {
           localStorage.setItem('rubiks_cube_muted', String(muted));
         } catch (err) {
-          console.error('Error saving muted state to localStorage:', err);
+          console.log('Error saving muted state to localStorage:', err);
         }
       }
     },
@@ -362,7 +362,7 @@ export const useCubeStore = create<CubeStore>((set, get) => {
           set({ isMuted: savedMuted === 'true' });
         }
       } catch (err) {
-        console.error('Error loading state from localStorage:', err);
+        console.log('Error loading state from localStorage:', err);
       }
     },
 
@@ -376,7 +376,7 @@ export const useCubeStore = create<CubeStore>((set, get) => {
           localStorage.setItem('rubiks_cube_state', stateStr);
         }
       } catch (err) {
-        console.error('Error saving state to localStorage:', err);
+        console.log('Error saving state to localStorage:', err);
       }
     },
   };

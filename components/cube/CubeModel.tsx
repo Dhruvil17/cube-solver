@@ -128,8 +128,6 @@ export function CubeModel() {
         const face = faceKeys[key];
         const isPrime = e.shiftKey;
         const mv = `${face}${isPrime ? "'" : ""}`;
-        // eslint-disable-next-line no-console
-        console.log("[swipe-debug] keyboard move queued:", mv);
         queueMoves([mv]);
       }
     };
@@ -167,8 +165,6 @@ export function CubeModel() {
   // pointerup AND pointercancel so we never get stuck with orbit disabled.
   const releaseDrag = () => {
     if (dragStartInfo.current) {
-      // eslint-disable-next-line no-console
-      console.log("[swipe-debug] releaseDrag — clearing drag for", dragStartInfo.current.face, dragStartInfo.current.cubieId);
       dragStartInfo.current = null;
       if (controls) {
         controls.enabled = true;
@@ -315,17 +311,6 @@ export function CubeModel() {
 
         if (detectedMove) {
           // TEMP DEBUG — remove after diagnosing the swipe issue.
-          // eslint-disable-next-line no-console
-          console.log("[swipe-debug]", {
-            face,
-            cx, cy, cz,
-            screenDX: Math.round(screenDX),
-            screenDY: Math.round(screenDY),
-            alongA,
-            signPositive,
-            detectedMove,
-            queueLengthBefore: moveQueue.length,
-          });
           queueMoves([detectedMove]);
           releaseDrag();
         }
@@ -335,8 +320,6 @@ export function CubeModel() {
     // ── Idle: pull next move from queue ──────────────────────────────────────
     if (!animatingMove) {
       if (moveQueue.length > 0) {
-        // eslint-disable-next-line no-console
-        console.log("[swipe-debug] startAnimatingNext — queue was:", [...moveQueue]);
         startAnimatingNext();
       }
       // Nothing else to do — meshes already in correct positions from last finishAnimatingMove
@@ -350,11 +333,7 @@ export function CubeModel() {
     const isDouble = animatingMove.includes("2");
 
     if (animProgress.current === 0) {
-      // eslint-disable-next-line no-console
-      console.log("[swipe-debug] ANIMATING move:", animatingMove, "moveFace:", moveFace, "isPrime:", isPrime, "isDouble:", isDouble);
       const movingCubieIds = cubies.filter((c) => isCubieOnFace(c, moveFace)).map((c) => c.id);
-      // eslint-disable-next-line no-console
-      console.log("[swipe-debug] cubies on this face about to rotate:", movingCubieIds.length, movingCubieIds);
     }
 
     const angleMultiplier = isPrime ? -1 : isDouble ? 2 : 1;
@@ -389,8 +368,6 @@ export function CubeModel() {
 
     // Animation complete
     if (animProgress.current >= 1) {
-      // eslint-disable-next-line no-console
-      console.log("[swipe-debug] FINISHED move:", animatingMove);
       animProgress.current = 0;
       finishAnimatingMove();
     }
@@ -403,8 +380,6 @@ export function CubeModel() {
   useEffect(() => {
     // Only sync when we're NOT mid-animation
     if (animatingMove) return;
-    // eslint-disable-next-line no-console
-    console.log("[swipe-debug] SYNC effect — resetting mesh positions for", cubies.length, "cubies");
     cubies.forEach((cubie) => {
       const mesh = meshById.current.get(cubie.id);
       if (!mesh) return;
@@ -424,8 +399,6 @@ export function CubeModel() {
   ) => {
     e.stopPropagation();
     if (animatingMove) {
-      // eslint-disable-next-line no-console
-      console.log("[swipe-debug] pointerDown IGNORED — animatingMove in progress:", animatingMove);
       return;
     }
     if (controls) {
@@ -443,15 +416,6 @@ export function CubeModel() {
       screenY: e.nativeEvent.clientY,
       worldOrigin: e.point.clone(),
     };
-    // eslint-disable-next-line no-console
-    console.log("[swipe-debug] pointerDown", {
-      cubieId,
-      face,
-      cx, cy, cz,
-      screenX: e.nativeEvent.clientX,
-      screenY: e.nativeEvent.clientY,
-      worldOrigin: e.point.toArray(),
-    });
   };
 
   // ─── RENDER ──────────────────────────────────────────────────────────────────

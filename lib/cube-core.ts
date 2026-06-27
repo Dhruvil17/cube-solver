@@ -67,6 +67,26 @@ export function isSolvedState(state: Cubie[]): boolean {
   return true;
 }
 
+// Check if the current state is visually solved (each face is monochromatic in any orientation)
+export function isVisuallySolved(state: Cubie[]): boolean {
+  const faces: FaceLetter[] = ['U', 'D', 'R', 'L', 'F', 'B'];
+  for (const face of faces) {
+    let faceColor: string | null = null;
+    for (const cubie of state) {
+      if (isCubieOnFace(cubie, face)) {
+        const color = cubie.colors[face];
+        if (color === null) return false; // Outer facelet must have a color
+        if (faceColor === null) {
+          faceColor = color;
+        } else if (color !== faceColor) {
+          return false; // Different colors on the same face
+        }
+      }
+    }
+  }
+  return true;
+}
+
 // 54-facelet mapping array matching cubejs (U, R, F, D, L, B in order, reading-order per face)
 export const FACELET_MAPPING: { x: number; y: number; z: number; face: FaceLetter }[] = [
   // U Face (y = 1)
