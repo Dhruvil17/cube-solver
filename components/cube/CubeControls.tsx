@@ -40,7 +40,7 @@ export function CubeControls() {
       {/* 1. Core Actions Card */}
       <div className="rounded-2xl border border-cube-border bg-cube-surface/80 p-4 sm:p-5 backdrop-blur-md">
         <h2 className="text-sm font-semibold uppercase tracking-wider text-cube-muted flex items-center justify-between">
-          <span>Engine Controls</span>
+          <span>Cube Controls</span>
           <span className="flex items-center gap-1.5 text-[10px] normal-case bg-cube-border/40 px-2 py-0.5 rounded-full text-slate-300">
             <span className={`h-1.5 w-1.5 rounded-full ${isSolverReady ? "bg-green-500 animate-pulse" : "bg-amber-500 animate-pulse"}`} />
             {isSolverReady ? "Solver Ready" : "Solver Compiling"}
